@@ -1,2 +1,11 @@
-# Folder
+# Folder/s
 Data
+# Jupyter Notebook
+.ipynb_checkpoints
+experiments.ipynb
+# Byte-compiled / optimized / DLL files
+__pycache__/
+# Black config file
+pyproject.toml
+# Pycharm
+.idea
