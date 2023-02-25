@@ -173,13 +173,11 @@ def create_dataset_and_dataloader(
         )
         for dataset_type in datasets_types
     }
-    if sampler:
-        shuffle = False
     data_loaders = {
         dataset: DataLoader(
             datasets[dataset],
             batch_size=batch_size,
-            shuffle=shuffle,
+            shuffle=shuffle if dataset != "train" else False,
             num_workers=num_workers,
             sampler=sampler
             if (sampler and dataset == "train")
