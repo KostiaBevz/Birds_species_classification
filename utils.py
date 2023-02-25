@@ -1,10 +1,11 @@
+import os
 from os import cpu_count
 from typing import Any, Optional, Tuple
 
 import torch
 import torcheval.metrics
 import torchvision
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, WeightedRandomSampler
 from tqdm import tqdm
 
 from Custom_dataset import Fruits_and_vegetables_dataset
@@ -35,6 +36,10 @@ def train_model(
             Predefined loss function
         num_epochs: Optional[int]
             Number of epochs to train
+        device: Optional[torch.device]
+            Device to perform calculation
+        scheduler: Optional[Any]
+            Scheduler to adjust learning rate per epoch
 
     Returns:
         None
@@ -66,7 +71,7 @@ def train_model(
 
             running_loss += loss.item()
 
-        avg_loss = running_loss/(batch_indx+1)
+        avg_loss = running_loss / (batch_indx + 1)
         train_f1_score = metric.compute()
         metric.reset()
         if scheduler:
@@ -132,6 +137,8 @@ def create_dataset_and_dataloader(
         torchvision.transforms.Compose
     ] = None,  # ask Fred
     num_workers: Optional[int] = cpu_count(),
+    sampler: Optional[WeightedRandomSampler] = None,
+    shuffle: Optional[bool] = True,
 ) -> dict[str, DataLoader]:
     """
     Creating train, test and validation datasets
@@ -146,6 +153,10 @@ def create_dataset_and_dataloader(
             Number of samples to take in one iteration
         transformation: torchvision.transform
             Transformations applied to the initial image
+        sampler: torch.utils.data.WeightedRandomSampler
+            Sampler for imbalanced datasets
+        shuffle: boot
+            To have the data reshuffled at every epoch
 
     Returns:
         Dict(str, DataLoader)
@@ -162,14 +173,63 @@ def create_dataset_and_dataloader(
         )
         for dataset_type in datasets_types
     }
-
+    if sampler:
+        shuffle = False
     data_loaders = {
         dataset: DataLoader(
             datasets[dataset],
             batch_size=batch_size,
-            shuffle=True,
+            shuffle=shuffle,
             num_workers=num_workers,
+            sampler=sampler
+            if (sampler and dataset == "train")
+            else None,
         )
         for dataset in datasets_types
     }
-    return data_loaders
+    return datasets, data_loaders
+
+
+def create_custom_sampler(
+    root_dir: str,
+    dataset: Fruits_and_vegetables_dataset,
+    dataloader: DataLoader,
+    train_data_placeholder: Optional[str] = "train",
+) -> WeightedRandomSampler:
+    """
+    Create custom WeightedRandomSampler from pytorch
+    to deal with imbalanced dataset
+
+    Args:
+        root_dir: str
+            Root directory with data files
+        dataset: Fruits_and_vegetables_dataset
+            Custom dataset with train data created with function below
+        dataloader: DataLoader
+            DataLoader with train data
+        train_data_placeholder: str
+            Placeholder for os.walk proper search
+
+    Returns:
+        sampler: WeightedRandomSampler
+            Custom sampler for imbalanced dataset
+    """
+    print("Creating data sampler")
+    class_weights = []
+    for root, sub_dir, files in os.walk(root_dir + train_data_placeholder):
+        if files:
+            class_weights.append(1 / len(files))
+    sample_weights = [0] * len(dataset)
+    if dataloader.batch_size > 1:
+        for (_, labels) in dataloader:
+            for idx, label in enumerate(labels):
+                class_w = class_weights[label]
+                sample_weights[idx] = class_w
+    else:
+        for idx, (_, label) in enumerate(dataloader):
+            class_w = class_weights[label]
+            sample_weights[idx] = class_w
+    sampler = WeightedRandomSampler(
+        sample_weights, num_samples=len(sample_weights), replacement=True
+    )
+    return sampler

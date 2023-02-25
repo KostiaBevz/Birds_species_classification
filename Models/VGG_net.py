@@ -3,7 +3,7 @@ from typing import List, Optional, Tuple
 import torch
 from torch import nn
 
-# TODO: add weight initialization and learn about them
+# TODO: add weight initialization
 
 VGG = [
     64,
