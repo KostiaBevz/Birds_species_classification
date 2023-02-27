@@ -6,22 +6,27 @@ from torcheval.metrics import MulticlassF1Score
 from torchvision import transforms
 
 from Models.VGG_net import VGG, VGG_Net
-from utils import (calculate_stat_of_input_dataset,
-                   create_dataset_and_dataloader, train_model)
+from utils import (
+    calculate_stat_of_input_dataset,
+    create_dataset_and_dataloader,
+    train_model,
+    create_custom_sampler,
+)
 
 seed = 102  # ask q
 torch.manual_seed(seed)
 torch.set_default_dtype(torch.float32)
 
-#  TODO: check albumentations lib
-#  TODO: deal with imbalanced dataset
+
 #  TODO: add Callbacks to training loop
-# TODO: play with tensorboard
+#  TODO: play with tensorboard
 #  TODO: tests coverage
 #  TODO: mlflow
 #  TODO: deploy model, add CI/CD to github
 
-# TODO: ask Fred about multiprocessing related to __main__
+# TODO: restructure project create folders corresponds their goals,
+# check cookiecutter
+
 if __name__ == "__main__":
     """
     Optimal BATCH_SIZE=8 for my cpu memory if choose more
@@ -33,27 +38,39 @@ if __name__ == "__main__":
     device = torch.device("mps")
     data = pd.read_csv(ROOT_DIR + "annotation.csv")
     NUM_CLASSES = data["class_id"].nunique()
+    train_data_placeholder = "train"
+    num_workers = 2
 
-    data_loaders = create_dataset_and_dataloader(
+    datasets, data_loaders = create_dataset_and_dataloader(
         file_name=FILE_NAME,
         root_dir=ROOT_DIR,
         batch_size=BATCH_SIZE,
-        num_workers=2,
+        num_workers=num_workers,
     )
 
-    mean, var, std = calculate_stat_of_input_dataset(data_loaders["train"])
+    sampler = create_custom_sampler(
+        root_dir=ROOT_DIR,
+        dataset=datasets.get(train_data_placeholder),
+        dataloader=data_loaders.get(train_data_placeholder),
+        train_data_placeholder=train_data_placeholder,
+    )
+
+    mean, var, std = calculate_stat_of_input_dataset(
+        data_loaders[train_data_placeholder]
+    )
 
     custom_transform = transforms.Compose(
         [transforms.ToTensor(), transforms.Normalize(mean=mean, std=std)]
     )
-    img_size, _ = next(iter(data_loaders["test"]))
+    img_size, _ = next(iter(data_loaders[train_data_placeholder]))
 
-    data_loaders = create_dataset_and_dataloader(
+    _, data_loaders = create_dataset_and_dataloader(
         file_name=FILE_NAME,
         root_dir=ROOT_DIR,
         batch_size=BATCH_SIZE,
         transformation=custom_transform,
-        num_workers=2,
+        num_workers=num_workers,
+        sampler=sampler,
     )
     gc.collect()
 
@@ -66,7 +83,7 @@ if __name__ == "__main__":
 
     # Model constants
     learning_rate = 0.1
-    number_of_epochs = 7  # 10-15
+    number_of_epochs = 2  # 10-15
     loss = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
     # scheduler = torch.optim.lr_scheduler.ExponentialLR(

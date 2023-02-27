@@ -3,8 +3,6 @@ from typing import List, Optional, Tuple
 import torch
 from torch import nn
 
-# TODO: add weight initialization and learn about them
-
 VGG = [
     64,
     64,
@@ -65,6 +63,7 @@ class VGG_Net(nn.Module):
                             kernel_size=3,
                             stride=1,
                             padding=1,
+                            # When use BatchNorm2d we can set it to False
                             bias=False,
                         ),
                         nn.BatchNorm2d(out_channels),  # Optional
