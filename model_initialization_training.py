@@ -24,7 +24,9 @@ torch.set_default_dtype(torch.float32)
 #  TODO: mlflow
 #  TODO: deploy model, add CI/CD to github
 
-# TODO: ask Fred about multiprocessing related to __main__
+# TODO: restructure project create folders corresponds their goals,
+# check cookiecutter
+
 if __name__ == "__main__":
     """
     Optimal BATCH_SIZE=8 for my cpu memory if choose more

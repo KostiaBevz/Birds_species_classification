@@ -5,10 +5,14 @@ from typing import Any, Optional, Tuple
 import torch
 import torcheval.metrics
 import torchvision
-from torch.utils.data import DataLoader, WeightedRandomSampler
+from torch.utils.data import DataLoader
+from torch.utils.data import Sampler as _SamplerType
+from torch.utils.data import WeightedRandomSampler
 from tqdm import tqdm
 
 from Custom_dataset import Fruits_and_vegetables_dataset
+
+# TODO: add CLI, add kaggle auth, logging
 
 
 def train_model(
@@ -60,7 +64,6 @@ def train_model(
 
             loss = loss_fn(out, labels)
             loss.backward()
-
             out = torch.max(out, dim=1).indices  # think about it
             metric.update(out, labels)
 
@@ -133,11 +136,9 @@ def create_dataset_and_dataloader(
     file_name: str,
     root_dir: str,
     batch_size: Optional[int] = 16,
-    transformation: Optional[
-        torchvision.transforms.Compose
-    ] = None,  # ask Fred
+    transformation: Optional[torchvision.transforms.Compose] = None,
     num_workers: Optional[int] = cpu_count(),
-    sampler: Optional[WeightedRandomSampler] = None,
+    sampler: Optional[_SamplerType] = None,
     shuffle: Optional[bool] = True,
 ) -> dict[str, DataLoader]:
     """
@@ -179,9 +180,7 @@ def create_dataset_and_dataloader(
             batch_size=batch_size,
             shuffle=shuffle if dataset != "train" else False,
             num_workers=num_workers,
-            sampler=sampler
-            if (sampler and dataset == "train")
-            else None,
+            sampler=sampler if (sampler and dataset == "train") else None,
         )
         for dataset in datasets_types
     }
@@ -219,10 +218,12 @@ def create_custom_sampler(
             class_weights.append(1 / len(files))
     sample_weights = [0] * len(dataset)
     if dataloader.batch_size > 1:
+        indx = 0
         for (_, labels) in dataloader:
-            for idx, label in enumerate(labels):
+            for label in labels:
                 class_w = class_weights[label]
-                sample_weights[idx] = class_w
+                sample_weights[indx] = class_w
+                indx += 1
     else:
         for idx, (_, label) in enumerate(dataloader):
             class_w = class_weights[label]
