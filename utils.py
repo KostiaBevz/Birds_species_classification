@@ -64,7 +64,8 @@ def train_model(
 
             loss = loss_fn(out, labels)
             loss.backward()
-            out = torch.max(out, dim=1).indices  # think about it
+        #  Equal to torch.nn.functional.softmax(out, dim=1).max(dim=1).indices
+            out = torch.max(out, dim=1).indices
             metric.update(out, labels)
 
             optimizer.step()
@@ -79,9 +80,10 @@ def train_model(
         metric.reset()
         if scheduler:
             scheduler.step()
+
+        # Evaluation phase
         model.eval()
         running_vloss = 0.0
-
         with torch.no_grad():
             for vbatch_indx, (vinputs, vlabels) in enumerate(
                 validation_loader
