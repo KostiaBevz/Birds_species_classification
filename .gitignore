@@ -1,5 +1,5 @@
 # Folder/s
-Data
+data
 # Jupyter Notebook
 .ipynb_checkpoints
 experiments.ipynb
@@ -10,3 +10,5 @@ pyproject.toml
 # Pycharm
 .idea
 .vscode
+# Environment variables
+.env
