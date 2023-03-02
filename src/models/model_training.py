@@ -14,7 +14,6 @@ from utils import (
     calculate_stat_of_input_dataset,
     create_custom_sampler,
     create_dataset_and_dataloader,
-    train_model,
 )
 
 seed = 102  # ask q
@@ -102,7 +101,7 @@ if __name__ == "__main__":
     # )
     metric = MulticlassF1Score(num_classes=NUM_CLASSES, device=device)
 
-    train_model(
+    model.train_model(
         model=model,
         train_loader=data_loaders["train"],
         validation_loader=data_loaders["validation"],
