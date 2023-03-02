@@ -1,21 +1,21 @@
 import gc
 import os
+import sys
 
 import pandas as pd
 import torch
 from torcheval.metrics import MulticlassF1Score
 from torchvision import transforms
-import sys
 
 sys.path.append("./")
+import config
 from models.ResNet import ResNet
 from utils import (
     calculate_stat_of_input_dataset,
+    create_custom_sampler,
     create_dataset_and_dataloader,
     train_model,
-    create_custom_sampler,
 )
-import config
 
 seed = 102  # ask q
 torch.manual_seed(seed)
@@ -56,9 +56,11 @@ if __name__ == "__main__":
             collection, config.DATASET_DIR + f"{config.DATASET_NAME}.pt"
         )
     else:
-        tensors = torch.load(config.DATASET_DIR + f"{config.DATASET_NAME}.pt")
-        mean_loaded = tensors["mean"]
-        std_loaded = tensors["std"]
+        stat_data_tensors = torch.load(
+            config.DATASET_DIR + f"{config.DATASET_NAME}.pt"
+        )
+        mean = stat_data_tensors["mean"]
+        std = stat_data_tensors["std"]
 
     sampler = create_custom_sampler(
         root_dir=config.DATA_DIR,
