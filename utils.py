@@ -10,7 +10,7 @@ from torch.utils.data import Sampler as _SamplerType
 from torch.utils.data import WeightedRandomSampler
 from tqdm import tqdm
 
-from Custom_dataset import Fruits_and_vegetables_dataset
+from datasets.fruits_veg_dataset import Fruits_and_vegetables_dataset
 
 # TODO: add CLI, add kaggle auth, logging
 

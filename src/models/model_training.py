@@ -4,14 +4,16 @@ import pandas as pd
 import torch
 from torcheval.metrics import MulticlassF1Score
 from torchvision import transforms
-
-from Models.VGG_net import VGG, VGG_Net
+import sys
+sys.path.append("./")
+from models.ResNet import ResNet
 from utils import (
     calculate_stat_of_input_dataset,
     create_dataset_and_dataloader,
     train_model,
     create_custom_sampler,
 )
+import config
 
 seed = 102  # ask q
 torch.manual_seed(seed)
@@ -24,37 +26,33 @@ torch.set_default_dtype(torch.float32)
 #  TODO: mlflow
 #  TODO: deploy model, add CI/CD to github
 
-# TODO: restructure project create folders corresponds their goals,
-# check cookiecutter
 
 if __name__ == "__main__":
     """
     Optimal BATCH_SIZE=8 for my cpu memory if choose more
     aggresive numbers machine start lagging much
     """
-    BATCH_SIZE = 16
-    ROOT_DIR = "/Users/kostiantyn/Desktop/Birds_species_classification/Data/"
-    FILE_NAME = "annotation.csv"
+
     device = torch.device("mps")
-    data = pd.read_csv(ROOT_DIR + "annotation.csv")
+    data = pd.read_csv(config.DATA_DIR + config.ANNOTATION_FILE_NAME)
     NUM_CLASSES = data["class_id"].nunique()
     train_data_placeholder = "train"
-    num_workers = 2
+    RES_NET_CONFIG = [3, 4, 6, 3]
 
     datasets, data_loaders = create_dataset_and_dataloader(
-        file_name=FILE_NAME,
-        root_dir=ROOT_DIR,
-        batch_size=BATCH_SIZE,
-        num_workers=num_workers,
+        file_name=config.ANNOTATION_FILE_NAME,
+        root_dir=config.DATA_DIR,
+        batch_size=config.BATCH_SIZE,
+        num_workers=config.NUM_WORKERS,
     )
 
     sampler = create_custom_sampler(
-        root_dir=ROOT_DIR,
+        root_dir=config.DATA_DIR,
         dataset=datasets.get(train_data_placeholder),
         dataloader=data_loaders.get(train_data_placeholder),
         train_data_placeholder=train_data_placeholder,
     )
-
+    # TODO: move to Dataset config
     mean, var, std = calculate_stat_of_input_dataset(
         data_loaders[train_data_placeholder]
     )
@@ -65,20 +63,19 @@ if __name__ == "__main__":
     img_size, _ = next(iter(data_loaders[train_data_placeholder]))
 
     _, data_loaders = create_dataset_and_dataloader(
-        file_name=FILE_NAME,
-        root_dir=ROOT_DIR,
-        batch_size=BATCH_SIZE,
+        file_name=config.ANNOTATION_FILE_NAME,
+        root_dir=config.DATA_DIR,
+        batch_size=config.BATCH_SIZE,
         transformation=custom_transform,
-        num_workers=num_workers,
+        num_workers=config.NUM_WORKERS,
         sampler=sampler,
     )
     gc.collect()
 
-    model = VGG_Net(
+    model = ResNet(
         in_channels=img_size.shape[1],
         num_classes=NUM_CLASSES,
-        model_structure=VGG,
-        image_size=img_size.shape[2],
+        layers=RES_NET_CONFIG
     ).to(device)
 
     # Model constants
