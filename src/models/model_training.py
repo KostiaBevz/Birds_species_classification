@@ -1,19 +1,20 @@
 import gc
+import os
+import sys
 
 import pandas as pd
 import torch
 from torcheval.metrics import MulticlassF1Score
 from torchvision import transforms
-import sys
+
 sys.path.append("./")
+import config
 from models.ResNet import ResNet
 from utils import (
     calculate_stat_of_input_dataset,
-    create_dataset_and_dataloader,
-    train_model,
     create_custom_sampler,
+    create_dataset_and_dataloader,
 )
-import config
 
 seed = 102  # ask q
 torch.manual_seed(seed)
@@ -45,6 +46,20 @@ if __name__ == "__main__":
         batch_size=config.BATCH_SIZE,
         num_workers=config.NUM_WORKERS,
     )
+    if f"{config.DATASET_NAME}.pt" not in os.listdir(config.DATASET_DIR):
+        mean, var, std = calculate_stat_of_input_dataset(
+            data_loaders[train_data_placeholder]
+        )
+        collection = {"mean": mean, "var": var, "std": std}
+        torch.save(
+            collection, config.DATASET_DIR + f"{config.DATASET_NAME}.pt"
+        )
+    else:
+        stat_data_tensors = torch.load(
+            config.DATASET_DIR + f"{config.DATASET_NAME}.pt"
+        )
+        mean = stat_data_tensors["mean"]
+        std = stat_data_tensors["std"]
 
     sampler = create_custom_sampler(
         root_dir=config.DATA_DIR,
@@ -52,13 +67,11 @@ if __name__ == "__main__":
         dataloader=data_loaders.get(train_data_placeholder),
         train_data_placeholder=train_data_placeholder,
     )
-    # TODO: move to Dataset config
-    mean, var, std = calculate_stat_of_input_dataset(
-        data_loaders[train_data_placeholder]
-    )
-
     custom_transform = transforms.Compose(
-        [transforms.ToTensor(), transforms.Normalize(mean=mean, std=std)]
+        [
+            transforms.ToTensor(),
+            transforms.Normalize(mean=mean, std=std),
+        ]
     )
     img_size, _ = next(iter(data_loaders[train_data_placeholder]))
 
@@ -75,7 +88,7 @@ if __name__ == "__main__":
     model = ResNet(
         in_channels=img_size.shape[1],
         num_classes=NUM_CLASSES,
-        layers=RES_NET_CONFIG
+        layers=RES_NET_CONFIG,
     ).to(device)
 
     # Model constants
@@ -88,7 +101,7 @@ if __name__ == "__main__":
     # )
     metric = MulticlassF1Score(num_classes=NUM_CLASSES, device=device)
 
-    train_model(
+    model.train_model(
         model=model,
         train_loader=data_loaders["train"],
         validation_loader=data_loaders["validation"],

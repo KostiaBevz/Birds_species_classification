@@ -1,6 +1,10 @@
 from typing import List, Optional
 from torch import nn
 import torch
+import sys
+sys.path.append("./")
+
+from models.BaseModel import BaseModel
 
 
 class ResNetBlock(nn.Module):
@@ -71,7 +75,7 @@ class ResNetBlock(nn.Module):
         return x
 
 
-class ResNet(nn.Module):
+class ResNet(nn.Module, BaseModel):
     def __init__(
         self,
         in_channels: int,
