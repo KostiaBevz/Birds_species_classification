@@ -1,11 +1,18 @@
+import sys
 from abc import ABC
-from typing import Optional
+from typing import Optional, Dict
+
+sys.path.append("./")
+
+from copy import deepcopy
 
 import torch
 import torcheval.metrics.metric
 from torch.optim.lr_scheduler import _LRScheduler
 from torch.utils.data import DataLoader
 from tqdm import tqdm
+
+import config
 
 
 class BaseModel(ABC):
@@ -26,6 +33,9 @@ class BaseModel(ABC):
         num_epochs: Optional[int] = 5,
         device: Optional[torch.device] = torch.device("mps"),
         scheduler: Optional[_LRScheduler] = None,
+        max_patience: Optional[int] = 4,
+        best_loss: Optional[float] = 10000.,
+        best_model: Optional[Dict] = {},
     ) -> None:
         """
         Perform model training
@@ -45,14 +55,23 @@ class BaseModel(ABC):
                 Device to perform calculation
             scheduler: Optional[Any]
                 Scheduler to adjust learning rate per epoch
+            best_loss: Optional[float]
+                Best loss of pretrained model,
+                used only when initial training was performed before
+            best_model: Optional[Dict]
+                Best model state_dict,
+                used only when initial training was performed before
 
         Returns:
             None
         """
-        running_loss = 0.0
-        avg_loss = 0.0
+        best_loss = best_loss
+        patience = 0
+        best_model = best_model
         len_of_data = len(train_loader)
         for epoch in range(num_epochs):
+            if patience == max_patience:
+                break
             model.train()
             loop = tqdm(
                 enumerate(train_loader), leave=False, total=len_of_data
@@ -60,11 +79,8 @@ class BaseModel(ABC):
             running_loss = 0.0
             for batch_indx, (input, labels) in loop:
                 input, labels = input.to(device), labels.to(device)
-
                 optimizer.zero_grad()
-
                 out = model(input)
-
                 loss = loss_fn(out, labels)
                 loss.backward()
                 """
@@ -77,7 +93,6 @@ class BaseModel(ABC):
                 optimizer.step()
 
                 loop.set_description(f"Epoch [{epoch+1}/{num_epochs}]")
-                loop.set_postfix(loss=loss.item())
 
                 running_loss += loss.item()
 
@@ -86,6 +101,18 @@ class BaseModel(ABC):
             metric.reset()
             if scheduler:
                 scheduler.step()
+            # Save checkpoint
+            # if epoch // 5 == 1:
+            torch.save(
+                {
+                    "epoch": epoch,
+                    "model_state_dict": model.state_dict(),
+                    "optimizer_state_dict": optimizer.state_dict(),
+                    "loss": avg_loss,
+                },
+                config.TRAINED_MODELS_DIRECTORY
+                + config.CHECKPOINT_MODEL_FILE_NAME,
+            )
 
             # Evaluation phase
             model.eval()
@@ -108,3 +135,14 @@ class BaseModel(ABC):
                 \nF1_score: train {train_f1_score} / valid {valid_f1_score}"
             )
             metric.reset()
+            # Earlystopping Callback
+            if avg_vloss < best_loss:
+                best_loss = avg_vloss
+                patience = 0
+                best_model = deepcopy(model.state_dict())
+            else:
+                patience += 1
+        torch.save(
+            best_model,
+            config.TRAINED_MODELS_DIRECTORY + config.BEST_MODEL_FILE_NAME,
+        )

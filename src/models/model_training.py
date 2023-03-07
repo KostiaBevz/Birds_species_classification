@@ -21,7 +21,7 @@ torch.manual_seed(seed)
 torch.set_default_dtype(torch.float32)
 
 
-#  TODO: add Callbacks to training loop
+
 #  TODO: play with tensorboard
 #  TODO: tests coverage
 #  TODO: mlflow
@@ -38,7 +38,6 @@ if __name__ == "__main__":
     data = pd.read_csv(config.DATA_DIR + config.ANNOTATION_FILE_NAME)
     NUM_CLASSES = data["class_id"].nunique()
     train_data_placeholder = "train"
-    RES_NET_CONFIG = [3, 4, 6, 3]
 
     datasets, data_loaders = create_dataset_and_dataloader(
         file_name=config.ANNOTATION_FILE_NAME,
@@ -73,7 +72,6 @@ if __name__ == "__main__":
             transforms.Normalize(mean=mean, std=std),
         ]
     )
-    img_size, _ = next(iter(data_loaders[train_data_placeholder]))
 
     _, data_loaders = create_dataset_and_dataloader(
         file_name=config.ANNOTATION_FILE_NAME,
@@ -86,9 +84,9 @@ if __name__ == "__main__":
     gc.collect()
 
     model = ResNet(
-        in_channels=img_size.shape[1],
+        in_channels=config.IMAGE_NUMBER_CHANNELS,
         num_classes=NUM_CLASSES,
-        layers=RES_NET_CONFIG,
+        layers=config.RES_NET_CONFIG,
     ).to(device)
 
     # Model constants
