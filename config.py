@@ -1,9 +1,14 @@
 BATCH_SIZE = 16
-DATA_DIR = "/Users/kostiantyn/Desktop/Fruits_vegetables_classification/data/"
+PROJECT_DIR = "/Users/kostiantyn/Desktop/Fruits_vegetables_classification"
+DATA_DIR = PROJECT_DIR + "/data/"
 ANNOTATION_FILE_NAME = "annotation.csv"
 NUM_WORKERS = 2
 DATASET = "kbevzuk/fruits-vegetables-classification-modified"
-DATASET_DIR = (
-    "/Users/kostiantyn/Desktop/Fruits_vegetables_classification/datasets/"
-)
+DATASET_DIR = PROJECT_DIR + "/datasets/"
 DATASET_NAME = "fruits_veg_dataset"
+RES_NET_CONFIG = [3, 4, 6, 3]
+IMAGE_SIZE = (224, 224)
+IMAGE_NUMBER_CHANNELS = 3
+TRAINED_MODELS_DIRECTORY = PROJECT_DIR + "/models/resnet_storage"
+CHECKPOINT_MODEL_FILE_NAME = "/checkpoint.tar"
+BEST_MODEL_FILE_NAME = "/best_res_net_state_dict.pt"

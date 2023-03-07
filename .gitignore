@@ -1,5 +1,5 @@
 # Folder/s
-data
+data/
 models/resnet_storage
 # Jupyter Notebook
 .ipynb_checkpoints

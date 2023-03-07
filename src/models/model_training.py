@@ -21,7 +21,6 @@ torch.manual_seed(seed)
 torch.set_default_dtype(torch.float32)
 
 
-
 #  TODO: play with tensorboard
 #  TODO: tests coverage
 #  TODO: mlflow
