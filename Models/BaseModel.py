@@ -1,6 +1,6 @@
 import sys
 from abc import ABC
-from typing import Optional, Dict
+from typing import Dict, Optional
 
 sys.path.append("./")
 
@@ -13,6 +13,9 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 import config
+import logger
+
+log = logger.log
 
 
 class BaseModel(ABC):
@@ -34,7 +37,7 @@ class BaseModel(ABC):
         device: Optional[torch.device] = torch.device("mps"),
         scheduler: Optional[_LRScheduler] = None,
         max_patience: Optional[int] = 4,
-        best_loss: Optional[float] = 10000.,
+        best_loss: Optional[float] = 10000.0,
         best_model: Optional[Dict] = {},
     ) -> None:
         """
@@ -65,6 +68,7 @@ class BaseModel(ABC):
         Returns:
             None
         """
+        log.info("Training start")
         best_loss = best_loss
         patience = 0
         best_model = best_model
@@ -73,9 +77,7 @@ class BaseModel(ABC):
             if patience == max_patience:
                 break
             model.train()
-            loop = tqdm(
-                enumerate(train_loader), leave=False, total=len_of_data
-            )
+            loop = tqdm(enumerate(train_loader), leave=False, total=len_of_data)
             running_loss = 0.0
             for batch_indx, (input, labels) in loop:
                 input, labels = input.to(device), labels.to(device)
@@ -102,25 +104,23 @@ class BaseModel(ABC):
             if scheduler:
                 scheduler.step()
             # Save checkpoint
-            # if epoch // 5 == 1:
-            torch.save(
-                {
-                    "epoch": epoch,
-                    "model_state_dict": model.state_dict(),
-                    "optimizer_state_dict": optimizer.state_dict(),
-                    "loss": avg_loss,
-                },
-                config.TRAINED_MODELS_DIRECTORY
-                + config.CHECKPOINT_MODEL_FILE_NAME,
-            )
+            if epoch % 5 == 0:
+                log.info("Saving checkpoint")
+                torch.save(
+                    {
+                        "epoch": epoch,
+                        "model_state_dict": model.state_dict(),
+                        "optimizer_state_dict": optimizer.state_dict(),
+                        "loss": avg_loss,
+                    },
+                    config.TRAINED_MODELS_DIRECTORY + config.CHECKPOINT_MODEL_FILE_NAME,
+                )
 
             # Evaluation phase
             model.eval()
             running_vloss = 0.0
             with torch.no_grad():
-                for vbatch_indx, (vinputs, vlabels) in enumerate(
-                    validation_loader
-                ):
+                for vbatch_indx, (vinputs, vlabels) in enumerate(validation_loader):
                     vinputs, vlabels = vinputs.to(device), vlabels.to(device)
                     voutputs = model(vinputs)
                     vloss = loss_fn(voutputs, vlabels)
@@ -142,6 +142,7 @@ class BaseModel(ABC):
                 best_model = deepcopy(model.state_dict())
             else:
                 patience += 1
+        log.info("Training end, saving model")
         torch.save(
             best_model,
             config.TRAINED_MODELS_DIRECTORY + config.BEST_MODEL_FILE_NAME,
