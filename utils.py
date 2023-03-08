@@ -1,5 +1,5 @@
 import os
-from os import cpu_count
+import sys
 from typing import Optional, Tuple
 
 import torch
@@ -9,9 +9,12 @@ from torch.utils.data import Sampler as _SamplerType
 from torch.utils.data import WeightedRandomSampler
 from tqdm import tqdm
 
+sys.path.append("./")
+import logger
 from datasets.fruits_veg_dataset import Fruits_and_vegetables_dataset
 
-# TODO: add CLI, add kaggle auth, logging
+# TODO: add CLI, add kaggle auth
+log = logger.log
 
 
 def calculate_stat_of_input_dataset(
@@ -29,7 +32,7 @@ def calculate_stat_of_input_dataset(
             Values for mean, variance and standart deviation of dataset
 
     """
-    print("Calculating mean, std of dataset")
+    log.info("Calculating mean, std of dataset")
     channel_sum, channel_sum_squared, num_batches = 0, 0, 0
     for data, _ in tqdm(dataloader):
         channel_sum += torch.mean(data, dim=[0, 2, 3])
@@ -48,7 +51,7 @@ def create_dataset_and_dataloader(
     root_dir: str,
     batch_size: Optional[int] = 16,
     transformation: Optional[torchvision.transforms.Compose] = None,
-    num_workers: Optional[int] = cpu_count(),
+    num_workers: Optional[int] = os.cpu_count(),
     sampler: Optional[_SamplerType] = None,
     shuffle: Optional[bool] = True,
 ) -> dict[str, DataLoader]:
@@ -122,7 +125,7 @@ def create_custom_sampler(
         sampler: WeightedRandomSampler
             Custom sampler for imbalanced dataset
     """
-    print("Creating data sampler")
+    log.info("Creating data sampler")
     class_weights = []
     for root, sub_dir, files in os.walk(root_dir + train_data_placeholder):
         if files:
@@ -130,7 +133,7 @@ def create_custom_sampler(
     sample_weights = [0] * len(dataset)
     if dataloader.batch_size > 1:
         indx = 0
-        for (_, labels) in dataloader:
+        for _, labels in dataloader:
             for label in labels:
                 class_w = class_weights[label]
                 sample_weights[indx] = class_w

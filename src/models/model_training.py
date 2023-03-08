@@ -9,6 +9,7 @@ from torchvision import transforms
 
 sys.path.append("./")
 import config
+import logger
 from models.ResNet import ResNet
 from utils import (
     calculate_stat_of_input_dataset,
@@ -25,6 +26,7 @@ torch.set_default_dtype(torch.float32)
 #  TODO: tests coverage
 #  TODO: mlflow
 #  TODO: deploy model, add CI/CD to github
+#  TODO: think about try/except constructions in get_data_kaggle.py
 
 
 if __name__ == "__main__":
@@ -32,7 +34,7 @@ if __name__ == "__main__":
     Optimal BATCH_SIZE=8 for my cpu memory if choose more
     aggresive numbers machine start lagging much
     """
-
+    log = logger.log
     device = torch.device("mps")
     data = pd.read_csv(config.DATA_DIR + config.ANNOTATION_FILE_NAME)
     NUM_CLASSES = data["class_id"].nunique()
@@ -49,13 +51,10 @@ if __name__ == "__main__":
             data_loaders[train_data_placeholder]
         )
         collection = {"mean": mean, "var": var, "std": std}
-        torch.save(
-            collection, config.DATASET_DIR + f"{config.DATASET_NAME}.pt"
-        )
+        torch.save(collection, config.DATASET_DIR + f"{config.DATASET_NAME}.pt")
     else:
-        stat_data_tensors = torch.load(
-            config.DATASET_DIR + f"{config.DATASET_NAME}.pt"
-        )
+        log.info("Getting dataset stats from .pth file")
+        stat_data_tensors = torch.load(config.DATASET_DIR + f"{config.DATASET_NAME}.pt")
         mean = stat_data_tensors["mean"]
         std = stat_data_tensors["std"]
 
@@ -97,7 +96,6 @@ if __name__ == "__main__":
     #     optimizer, verbose=True, gamma=0.1
     # )
     metric = MulticlassF1Score(num_classes=NUM_CLASSES, device=device)
-
     model.train_model(
         model=model,
         train_loader=data_loaders["train"],
