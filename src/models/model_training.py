@@ -26,6 +26,7 @@ torch.set_default_dtype(torch.float32)
 #  TODO: tests coverage
 #  TODO: mlflow
 #  TODO: deploy model, add CI/CD to github
+#  TODO: think about try/except constructions in get_data_kaggle.py
 
 
 if __name__ == "__main__":
