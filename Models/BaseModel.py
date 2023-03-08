@@ -29,7 +29,7 @@ class BaseModel(ABC):
     def train_model(
         model: torch.nn.Module,
         train_loader: DataLoader,
-        validation_loader: DataLoader,
+        valid_loader: DataLoader,
         loss_fn: torch.nn,
         optimizer: torch.optim.Optimizer,
         metric: torcheval.metrics.Metric,
@@ -48,7 +48,7 @@ class BaseModel(ABC):
                 Pytorch model for training
             train_loader: DataLoader
                 Data loader for training set
-            validation_loader: DataLoader
+            valid_loader: DataLoader
                 Data loader for validation set
             loss_fn: torch.nn
                 Predefined loss function
@@ -77,7 +77,9 @@ class BaseModel(ABC):
             if patience == max_patience:
                 break
             model.train()
-            loop = tqdm(enumerate(train_loader), leave=False, total=len_of_data)
+            loop = tqdm(
+                enumerate(train_loader), leave=False, total=len_of_data
+            )
             running_loss = 0.0
             for batch_indx, (input, labels) in loop:
                 input, labels = input.to(device), labels.to(device)
@@ -113,14 +115,15 @@ class BaseModel(ABC):
                         "optimizer_state_dict": optimizer.state_dict(),
                         "loss": avg_loss,
                     },
-                    config.TRAINED_MODELS_DIRECTORY + config.CHECKPOINT_MODEL_FILE_NAME,
+                    config.TRAINED_MODELS_DIRECTORY
+                    + config.CHECKPOINT_MODEL_FILE_NAME,
                 )
 
             # Evaluation phase
             model.eval()
             running_vloss = 0.0
             with torch.no_grad():
-                for vbatch_indx, (vinputs, vlabels) in enumerate(validation_loader):
+                for vbatch_indx, (vinputs, vlabels) in enumerate(valid_loader):
                     vinputs, vlabels = vinputs.to(device), vlabels.to(device)
                     voutputs = model(vinputs)
                     vloss = loss_fn(voutputs, vlabels)
