@@ -1,6 +1,7 @@
 # Folder/s
 data/
 models/resnet_storage
+mlruns
 # Jupyter Notebook
 .ipynb_checkpoints
 experiments.ipynb

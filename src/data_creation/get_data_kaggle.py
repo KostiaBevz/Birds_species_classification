@@ -44,7 +44,9 @@ if __name__ == "__main__":
             for indx, class_name in enumerate(os.listdir(directory_path)):
                 data["class_id"] = indx
                 data["class_name"] = class_name
-                class_directory_path = os.path.join(directory_path, class_name + "/")
+                class_directory_path = os.path.join(
+                    directory_path, class_name + "/"
+                )
                 for img in os.listdir(class_directory_path):
                     img_path = os.path.join(class_directory_path, img)
                     data["absolute_path"] = img_path
