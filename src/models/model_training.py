@@ -94,7 +94,7 @@ if __name__ == "__main__":
 
     # Model constants
     learning_rate = 0.1
-    number_of_epochs = 2  # 10-15
+    number_of_epochs = 1  # 10-15
     loss = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
     # scheduler = torch.optim.lr_scheduler.ExponentialLR(

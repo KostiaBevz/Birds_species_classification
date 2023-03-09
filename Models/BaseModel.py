@@ -40,8 +40,7 @@ class BaseModel(ABC):
         max_patience: Optional[int] = 4,
         best_loss: Optional[float] = 10000.0,
         best_model: Optional[Dict] = {},
-        experiment_id: Optional[str] = None,
-        artifact_path: Optional[str] = "model_state_dict",
+        experiment_id: Optional[str] = None
     ) -> None:
         """
         Perform model training
@@ -145,10 +144,10 @@ class BaseModel(ABC):
             valid_f1_score = metric.compute()
             mlflow.log_metrics(
                 {
-                    "validation f1 score": valid_f1_score,
-                    "validation loss ": avg_vloss,
-                    "train loss": avg_loss,
-                    "train f1 score": train_f1_score,
+                    "validation f1 score": valid_f1_score.item(),
+                    "validation loss ": float(avg_vloss),
+                    "train loss": float(avg_loss),
+                    "train f1 score": train_f1_score.item(),
                 },
                 step=epoch,
             )
@@ -173,6 +172,6 @@ class BaseModel(ABC):
         mlflow.log_params(
             {"lr": optimizer.defaults["lr"], "num_epochs_trained": epoch}
         )
-        mlflow.log_metrics({"Best valid loss": best_loss})
-        mlflow.pytorch.log_state_dict(best_model, artifact_path)
+        mlflow.log_metrics({"best_valid_loss": best_loss.item()})
+        mlflow.pytorch.log_state_dict(best_model, config.MLFLOW_ARTIFACT_PATH)
         mlflow.end_run()
