@@ -63,12 +63,12 @@ if __name__ == "__main__":
         mean = stat_data_tensors["mean"]
         std = stat_data_tensors["std"]
 
-    # sampler = create_custom_sampler(
-    #     root_dir=config.DATA_DIR,
-    #     dataset=datasets.get(train_data_placeholder),
-    #     dataloader=data_loaders.get(train_data_placeholder),
-    #     train_data_placeholder=train_data_placeholder,
-    # )
+    sampler = create_custom_sampler(
+        root_dir=config.DATA_DIR,
+        dataset=datasets.get(train_data_placeholder),
+        dataloader=data_loaders.get(train_data_placeholder),
+        train_data_placeholder=train_data_placeholder,
+    )
     custom_transform = transforms.Compose(
         [
             transforms.ToTensor(),
@@ -82,7 +82,7 @@ if __name__ == "__main__":
         batch_size=config.BATCH_SIZE,
         transformation=custom_transform,
         num_workers=config.NUM_WORKERS,
-        # sampler=sampler,
+        sampler=sampler,
     )
     gc.collect()
 
