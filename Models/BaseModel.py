@@ -40,7 +40,7 @@ class BaseModel(ABC):
         max_patience: Optional[int] = 4,
         best_loss: Optional[float] = 10000.0,
         best_model: Optional[Dict] = {},
-        experiment_id: Optional[str] = None
+        experiment_id: Optional[str] = None,
     ) -> None:
         """
         Perform model training
@@ -170,7 +170,7 @@ class BaseModel(ABC):
             config.TRAINED_MODELS_DIRECTORY + config.BEST_MODEL_FILE_NAME,
         )
         mlflow.log_params(
-            {"lr": optimizer.defaults["lr"], "num_epochs_trained": epoch}
+            {"lr": optimizer.defaults["lr"], "num_epochs_trained": epoch + 1}
         )
         mlflow.log_metrics({"best_valid_loss": best_loss.item()})
         mlflow.pytorch.log_state_dict(best_model, config.MLFLOW_ARTIFACT_PATH)
