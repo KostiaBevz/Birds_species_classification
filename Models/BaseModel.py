@@ -66,6 +66,8 @@ class BaseModel(ABC):
             best_model: Optional[Dict]
                 Best model state_dict,
                 used only when initial training was performed before
+            experiment_id: Optional[str]
+                Experiment id used for mlflow logging
 
         Returns:
             None
