@@ -12,3 +12,5 @@ IMAGE_NUMBER_CHANNELS = 3
 TRAINED_MODELS_DIRECTORY = PROJECT_DIR + "/models/resnet_storage"
 CHECKPOINT_MODEL_FILE_NAME = "/checkpoint.tar"
 BEST_MODEL_FILE_NAME = "/best_res_net_state_dict.pt"
+MLFLOW_EXPERIMENT_NAME = "ResNet"
+MLFLOW_ARTIFACT_PATH = "model_state_dict"

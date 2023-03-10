@@ -16,6 +16,7 @@ from utils import (
     create_custom_sampler,
     create_dataset_and_dataloader,
 )
+import mlflow
 
 seed = 102  # ask q
 torch.manual_seed(seed)
@@ -51,10 +52,14 @@ if __name__ == "__main__":
             data_loaders[train_data_placeholder]
         )
         collection = {"mean": mean, "var": var, "std": std}
-        torch.save(collection, config.DATASET_DIR + f"{config.DATASET_NAME}.pt")
+        torch.save(
+            collection, config.DATASET_DIR + f"{config.DATASET_NAME}.pt"
+        )
     else:
         log.info("Getting dataset stats from .pth file")
-        stat_data_tensors = torch.load(config.DATASET_DIR + f"{config.DATASET_NAME}.pt")
+        stat_data_tensors = torch.load(
+            config.DATASET_DIR + f"{config.DATASET_NAME}.pt"
+        )
         mean = stat_data_tensors["mean"]
         std = stat_data_tensors["std"]
 
@@ -89,21 +94,31 @@ if __name__ == "__main__":
 
     # Model constants
     learning_rate = 0.1
-    number_of_epochs = 2  # 10-15
+    number_of_epochs = 30  # 10-15
     loss = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
     # scheduler = torch.optim.lr_scheduler.ExponentialLR(
     #     optimizer, verbose=True, gamma=0.1
     # )
     metric = MulticlassF1Score(num_classes=NUM_CLASSES, device=device)
+    try:
+        experiment_id = mlflow.create_experiment(config.MLFLOW_EXPERIMENT_NAME)
+    except Exception as e:
+        log.error(e)
+        experiment_id = mlflow.get_experiment_by_name(
+            config.MLFLOW_EXPERIMENT_NAME
+        ).experiment_id
+    log.info("Mflow setup")
+    log.info(f"Experiment_id : {experiment_id}")
     model.train_model(
         model=model,
         train_loader=data_loaders["train"],
-        validation_loader=data_loaders["validation"],
+        valid_loader=data_loaders["validation"],
         loss_fn=loss,
         optimizer=optimizer,
         metric=metric,
         num_epochs=number_of_epochs,
         device=device,
+        experiment_id=experiment_id
         # scheduler=scheduler,
     )

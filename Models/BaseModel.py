@@ -14,6 +14,7 @@ from tqdm import tqdm
 
 import config
 import logger
+import mlflow
 
 log = logger.log
 
@@ -39,6 +40,7 @@ class BaseModel(ABC):
         max_patience: Optional[int] = 4,
         best_loss: Optional[float] = 10000.0,
         best_model: Optional[Dict] = {},
+        experiment_id: Optional[str] = None,
     ) -> None:
         """
         Perform model training
@@ -69,6 +71,13 @@ class BaseModel(ABC):
             None
         """
         log.info("Training start")
+        runs = mlflow.search_runs(experiment_ids=[experiment_id])
+        mlflow.start_run(
+            run_name=f"ResNet_{len(runs)}",
+            experiment_id=experiment_id,
+            tags={"version": f"v{len(runs)}"},
+            description="ResNet model training experiments",
+        )
         best_loss = best_loss
         patience = 0
         best_model = best_model
@@ -133,6 +142,15 @@ class BaseModel(ABC):
                     running_vloss += vloss
                 avg_vloss = running_vloss / (vbatch_indx + 1)
             valid_f1_score = metric.compute()
+            mlflow.log_metrics(
+                {
+                    "validation f1 score": valid_f1_score.item(),
+                    "validation loss ": float(avg_vloss),
+                    "train loss": float(avg_loss),
+                    "train f1 score": train_f1_score.item(),
+                },
+                step=epoch,
+            )
             print(
                 f"LOSS: train {avg_loss} / valid {avg_vloss} \
                 \nF1_score: train {train_f1_score} / valid {valid_f1_score}"
@@ -145,8 +163,15 @@ class BaseModel(ABC):
                 best_model = deepcopy(model.state_dict())
             else:
                 patience += 1
+
         log.info("Training end, saving model")
         torch.save(
             best_model,
             config.TRAINED_MODELS_DIRECTORY + config.BEST_MODEL_FILE_NAME,
         )
+        mlflow.log_params(
+            {"lr": optimizer.defaults["lr"], "num_epochs_trained": epoch + 1}
+        )
+        mlflow.log_metrics({"best_valid_loss": best_loss.item()})
+        mlflow.pytorch.log_state_dict(best_model, config.MLFLOW_ARTIFACT_PATH)
+        mlflow.end_run()
