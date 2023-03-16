@@ -1,5 +1,4 @@
 import os
-import sys
 from typing import Optional, Tuple
 
 import torch
@@ -9,11 +8,9 @@ from torch.utils.data import Sampler as _SamplerType
 from torch.utils.data import WeightedRandomSampler
 from tqdm import tqdm
 
-sys.path.append("./")
 import logger
 from datasets.fruits_veg_dataset import Fruits_and_vegetables_dataset
 
-# TODO: add CLI, add kaggle auth
 log = logger.log
 
 
