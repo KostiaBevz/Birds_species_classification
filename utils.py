@@ -78,7 +78,7 @@ def create_dataset_and_dataloader(
     datasets_types = ["train", "validation", "test"]
     datasets = {
         dataset_type: Fruits_and_vegetables_dataset(
-            csv_file=file_name,
+            parquet_file=file_name,
             root_dir=root_dir,
             dataset_type=dataset_type,
             transform=transformation if transformation else None,

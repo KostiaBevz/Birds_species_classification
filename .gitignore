@@ -3,7 +3,7 @@ data/
 models/resnet_storage
 mlruns
 dist
-src/kbproject.egg-info
+kbproject.egg-info
 # Jupyter Notebook
 .ipynb_checkpoints
 experiments.ipynb
