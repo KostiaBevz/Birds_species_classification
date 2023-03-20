@@ -19,7 +19,7 @@ class Fruits_and_vegetables_dataset(Dataset):
 
     def __init__(
         self,
-        csv_file: str,
+        parquet_file: str,
         root_dir: Optional[str] = "./",
         column_name: Optional[str] = "dataset_type",
         dataset_type: Optional[str] = "train",
@@ -28,8 +28,8 @@ class Fruits_and_vegetables_dataset(Dataset):
     ) -> None:
         """
         Args:
-            csv_file: string
-                 Path to the csv file with data
+            parquet_file: string
+                 Path to the parquet file with data
             root_dir: string
                 Directory with all images
             column_name: string
@@ -41,7 +41,7 @@ class Fruits_and_vegetables_dataset(Dataset):
             img_size: Optional[Tuple]
                 transformation of images size
         """
-        data = pd.read_csv(root_dir + csv_file)
+        data = pd.read_parquet(root_dir + parquet_file)
         data = data[data[column_name] == dataset_type]
         self.data = data.reset_index(drop=True)
         self.transform = transform

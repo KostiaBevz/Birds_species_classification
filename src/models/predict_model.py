@@ -15,7 +15,7 @@ device = torch.device("mps")
 data = pd.read_csv(config.DATA_DIR + config.ANNOTATION_FILE_NAME)
 NUM_CLASSES = data["class_id"].nunique()
 
-# TODO: refactor
+# TODO: refactor -> move to the BaseModel as a method
 
 experiment = mlflow.get_experiment_by_name(config.MLFLOW_EXPERIMENT_NAME)
 df = mlflow.search_runs(

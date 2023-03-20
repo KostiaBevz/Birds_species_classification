@@ -58,7 +58,7 @@ class BaseModel(ABC):
                 Number of epochs to train
             device: Optional[torch.device]
                 Device to perform calculation
-            scheduler: Optional[Any]
+            scheduler: Optional[LRScheduler]
                 Scheduler to adjust learning rate per epoch
             best_loss: Optional[float]
                 Best loss of pretrained model,
@@ -177,3 +177,6 @@ class BaseModel(ABC):
         mlflow.log_metrics({"best_valid_loss": best_loss.item()})
         mlflow.pytorch.log_state_dict(best_model, config.MLFLOW_ARTIFACT_PATH)
         mlflow.end_run()
+
+    def predict():
+        pass

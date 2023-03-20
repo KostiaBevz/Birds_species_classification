@@ -1,7 +1,7 @@
 BATCH_SIZE = 16
 PROJECT_DIR = "/Users/kostiantyn/Desktop/Fruits_vegetables_classification"
 DATA_DIR = PROJECT_DIR + "/data/"
-ANNOTATION_FILE_NAME = "annotation.csv"
+ANNOTATION_FILE_NAME = "annotation.parquet"
 NUM_WORKERS = 2
 DATASET = "kbevzuk/fruits-vegetables-classification-modified"
 DATASET_DIR = PROJECT_DIR + "/datasets/"
