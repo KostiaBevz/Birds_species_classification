@@ -37,8 +37,8 @@ torch.set_default_dtype(torch.float32)
     help="Learning rate used for training",
 )
 @click.option(
-    "--number_of_epochs",
-    default=10,
+    "-epochs", "number_of_epochs",
+    default=2,
     type=int,
     help="Number of epochs for training",
 )
@@ -59,7 +59,7 @@ def main(
     resnet_config: Optional[list] = config.RES_NET_CONFIG,
     mlflow_exp_name: Optional[str] = config.MLFLOW_EXPERIMENT_NAME,
     learning_rate: Optional[float] = 0.1,
-    number_of_epochs: Optional[int] = 10,
+    number_of_epochs: Optional[int] = 2,
     is_scheduler: Optional[bool] = False,
 ):
     """
@@ -188,4 +188,16 @@ if __name__ == "__main__":
     Optimal BATCH_SIZE=8 for my cpu memory if choose more
     aggresive numbers machine start lagging much
     """
-    main(number_of_epochs=2)
+    main()
+    
+    # TODO: ask F
+    # import click
+
+    # @click.command()
+    # @click.argument('arg1')
+    # @click.argument('arg2')
+    # def my_command(arg1, arg2, arg3):
+    #     # Do something with the arguments
+    #     print(f"arg1 = {arg1}, arg2 = {arg2}")
+
+    # my_command(arg1=1, arg2=2)
