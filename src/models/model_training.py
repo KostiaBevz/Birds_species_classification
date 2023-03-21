@@ -25,8 +25,11 @@ torch.manual_seed(seed)
 torch.set_default_dtype(torch.float32)
 
 
-#  TODO: tests coverage
-#  TODO: deploy model, add CI/CD to github
+# TODO: add proper inference
+# TODO: add visualisation
+# TODO: add possibility to start training with given model_state
+# TODO: tests coverage
+# TODO: deploy model, add CI/CD to github
 
 
 @click.command()
