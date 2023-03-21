@@ -31,7 +31,7 @@ torch.set_default_dtype(torch.float32)
 
 @click.command()
 @click.option(
-    "--learning_rate",
+    "-lr", "learning_rate",
     default=0.1,
     type=float,
     help="Learning rate used for training",
@@ -49,6 +49,78 @@ torch.set_default_dtype(torch.float32)
     help="Mlflow experiment name",
 )
 def main(
+    annotation_file_name: Optional[str] = config.ANNOTATION_FILE_NAME,
+    data_dir: Optional[str] = config.DATA_DIR,
+    dataset_dir: Optional[str] = config.DATASET_DIR,
+    batch_size: Optional[int] = config.BATCH_SIZE,
+    num_workers: Optional[int] = config.NUM_WORKERS,
+    dataset_name: Optional[str] = config.DATASET_NAME,
+    image_number_channels: Optional[tuple] = config.IMAGE_NUMBER_CHANNELS,
+    resnet_config: Optional[list] = config.RES_NET_CONFIG,
+    mlflow_exp_name: Optional[str] = config.MLFLOW_EXPERIMENT_NAME,
+    learning_rate: Optional[float] = 0.1,
+    number_of_epochs: Optional[int] = 2,
+    is_scheduler: Optional[bool] = False,
+):
+    """
+    Wrapper around train_model function for CLI
+
+    Args:
+        annotation_file_name (str, optional):
+            Name of file where annotations stored.
+            Defaults to config.ANNOTATION_FILE_NAME.
+        data_dir (str, optional):
+            Path to the directory with data.
+            Defaults to config.DATA_DIR.
+        dataset_dir (str, optional):
+            Path to the directory with datasets stats.
+            Defaults to config.DATASET_DIR.
+        batch_size (int, optional):
+            Batch size value for data loaders creation.
+            Defaults to config.BATCH_SIZE.
+        num_workers (int, optional):
+            Number of workers for multiprocessing.
+            Defaults to config.NUM_WORKERS.
+        dataset_name (str, optional):
+            Name of dataset file where statistical data stored.
+            Defaults to config.DATASET_NAME.
+        image_number_channels (tuple, optional):
+            Number of channels for images in dataset, in majority cases 1 or 3.
+            Defaults to config.IMAGE_NUMBER_CHANNELS.
+        resnet_config (list, optional):
+            List with values that represent number of skip connectin layers.
+            Defaults to config.RES_NET_CONFIG.
+        mlflow_exp_name (str, optional):
+            Name of mlflow experiment to store model,
+            training metrics and other artifacts.
+            Defaults to config.MLFLOW_EXPERIMENT_NAME.
+        learning_rate (float, optional):
+            Learning rate used for training.
+            Defaults to 0.1.
+        number_of_epochs (int, optional):
+            Number of epochs for training.
+            Defaults to 10.
+        is_scheduler (bool, optional):
+            Do we need to use scheduler or not.
+            Defaults to False.
+    """
+    train_model(
+        annotation_file_name,
+        data_dir,
+        dataset_dir,
+        batch_size,
+        num_workers,
+        dataset_name,
+        image_number_channels,
+        resnet_config,
+        mlflow_exp_name,
+        learning_rate,
+        number_of_epochs,
+        is_scheduler
+    )
+
+
+def train_model(
     annotation_file_name: Optional[str] = config.ANNOTATION_FILE_NAME,
     data_dir: Optional[str] = config.DATA_DIR,
     dataset_dir: Optional[str] = config.DATASET_DIR,
@@ -188,8 +260,7 @@ if __name__ == "__main__":
     Optimal BATCH_SIZE=8 for my cpu memory if choose more
     aggresive numbers machine start lagging much
     """
-    main()
-    
+    # train_model(number_of_epochs=2)
     # TODO: ask F
     # import click
 
