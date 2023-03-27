@@ -263,7 +263,7 @@ if __name__ == "__main__":
     Optimal BATCH_SIZE=8 for my cpu memory if choose more
     aggresive numbers machine start lagging much
     """
-    # train_model(number_of_epochs=2)
+    train_model(number_of_epochs=2)
     # TODO: ask F
     # import click
 

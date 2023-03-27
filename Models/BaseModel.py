@@ -11,6 +11,7 @@ import torcheval.metrics.metric
 from torch.optim.lr_scheduler import _LRScheduler
 from torch.utils.data import DataLoader
 from tqdm import tqdm
+from torch.nn.modules.loss import _Loss
 
 import config
 import logger
@@ -27,11 +28,34 @@ class BaseModel(ABC):
         pass
 
     @staticmethod
+    def validation_loop(
+        model: torch.nn.Module,
+        loss_fn: _Loss,
+        valid_loader: DataLoader,
+        metric: torcheval.metrics.Metric,
+        device: Optional[torch.device] = torch.device("mps"),
+    ):
+        model.eval()
+        running_vloss = 0.0
+        with torch.no_grad():
+            for vbatch_indx, (vinputs, vlabels) in enumerate(valid_loader):
+                vinputs, vlabels = vinputs.to(device), vlabels.to(device)
+                voutputs = model(vinputs)
+                vloss = loss_fn(voutputs, vlabels)
+
+                voutputs = torch.max(voutputs, dim=1).indices
+                metric.update(voutputs, vlabels)
+                running_vloss += vloss
+            avg_vloss = running_vloss / (vbatch_indx + 1)
+        valid_f1_score = metric.compute()
+        return avg_vloss, valid_f1_score
+
     def train_model(
+        self,
         model: torch.nn.Module,
         train_loader: DataLoader,
         valid_loader: DataLoader,
-        loss_fn: torch.nn,
+        loss_fn: _Loss,
         optimizer: torch.optim.Optimizer,
         metric: torcheval.metrics.Metric,
         num_epochs: Optional[int] = 5,
@@ -52,7 +76,7 @@ class BaseModel(ABC):
                 Data loader for training set
             valid_loader: DataLoader
                 Data loader for validation set
-            loss_fn: torch.nn
+            loss_fn: _Loss
                 Predefined loss function
             num_epochs: Optional[int]
                 Number of epochs to train
@@ -131,19 +155,13 @@ class BaseModel(ABC):
                 )
 
             # Evaluation phase
-            model.eval()
-            running_vloss = 0.0
-            with torch.no_grad():
-                for vbatch_indx, (vinputs, vlabels) in enumerate(valid_loader):
-                    vinputs, vlabels = vinputs.to(device), vlabels.to(device)
-                    voutputs = model(vinputs)
-                    vloss = loss_fn(voutputs, vlabels)
-
-                    voutputs = torch.max(voutputs, dim=1).indices
-                    metric.update(voutputs, vlabels)
-                    running_vloss += vloss
-                avg_vloss = running_vloss / (vbatch_indx + 1)
-            valid_f1_score = metric.compute()
+            avg_vloss, valid_f1_score = self.validation_loop(
+                model=model,
+                loss_fn=loss_fn,
+                valid_loader=valid_loader,
+                metric=metric,
+            )
+            # Mlflow part
             mlflow.log_metrics(
                 {
                     "validation f1 score": valid_f1_score.item(),
