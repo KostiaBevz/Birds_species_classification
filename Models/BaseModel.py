@@ -1,8 +1,5 @@
-import sys
 from abc import ABC
 from typing import Dict, Optional
-
-sys.path.append("./")
 
 from copy import deepcopy
 
