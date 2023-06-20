@@ -12,6 +12,7 @@ sys.path.append("./")
 import config
 import logger
 from models.ResNet import ResNet, ResNetDeepBlock, ResNetBlock
+from models import BaseModel
 from utils import (
     calculate_stat_of_input_dataset,
     create_custom_sampler,
@@ -30,6 +31,7 @@ torch.set_default_dtype(torch.float32)
 # TODO: add possibility to start training with given model_state
 # TODO: tests coverage
 # TODO: deploy model, add CI/CD to github
+# TODO: wrap model to lightning for multigpu usage
 
 
 @click.command()
