@@ -11,7 +11,8 @@ from torchvision import transforms
 sys.path.append("./")
 import config
 import logger
-from models.ResNet import ResNet
+from models.ResNet import ResNet, ResNetDeepBlock, ResNetBlock
+from models import BaseModel
 from utils import (
     calculate_stat_of_input_dataset,
     create_custom_sampler,
@@ -30,6 +31,7 @@ torch.set_default_dtype(torch.float32)
 # TODO: add possibility to start training with given model_state
 # TODO: tests coverage
 # TODO: deploy model, add CI/CD to github
+# TODO: wrap model to lightning for multigpu usage
 
 
 @click.command()
@@ -132,6 +134,7 @@ def train_model(
     dataset_name: Optional[str] = config.DATASET_NAME,
     image_number_channels: Optional[tuple] = config.IMAGE_NUMBER_CHANNELS,
     resnet_config: Optional[list] = config.RES_NET_CONFIG,
+    resnet_block: Optional[ResNetBlock or ResNetDeepBlock] = ResNetDeepBlock,
     mlflow_exp_name: Optional[str] = config.MLFLOW_EXPERIMENT_NAME,
     learning_rate: Optional[float] = 0.1,
     number_of_epochs: Optional[int] = 2,
@@ -223,11 +226,14 @@ def train_model(
         sampler=sampler,
     )
     gc.collect()
+
     model = ResNet(
         in_channels=image_number_channels,
         num_classes=NUM_CLASSES,
         layers=resnet_config,
+        block=resnet_block
     ).to(device)
+
     loss = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
     if is_scheduler:
@@ -235,6 +241,7 @@ def train_model(
             optimizer, verbose=True, gamma=0.1
         )
     metric = MulticlassF1Score(num_classes=NUM_CLASSES, device=device)
+
     try:
         experiment_id = mlflow.create_experiment(mlflow_exp_name)
     except Exception as e:
@@ -242,6 +249,7 @@ def train_model(
         experiment_id = mlflow.get_experiment_by_name(
             mlflow_exp_name
         ).experiment_id
+
     log.info("Mflow setup")
     log.info(f"Experiment_id : {experiment_id}")
     model.train_model(
@@ -264,14 +272,3 @@ if __name__ == "__main__":
     aggresive numbers machine start lagging much
     """
     train_model(number_of_epochs=2)
-    # TODO: ask F
-    # import click
-
-    # @click.command()
-    # @click.argument('arg1')
-    # @click.argument('arg2')
-    # def my_command(arg1, arg2, arg3):
-    #     # Do something with the arguments
-    #     print(f"arg1 = {arg1}, arg2 = {arg2}")
-
-    # my_command(arg1=1, arg2=2)

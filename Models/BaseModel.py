@@ -1,8 +1,5 @@
-import sys
 from abc import ABC
 from typing import Dict, Optional
-
-sys.path.append("./")
 
 from copy import deepcopy
 
@@ -21,15 +18,12 @@ log = logger.log
 
 
 class BaseModel(ABC):
-    def __init__(self):
-        pass
 
     def save_model():
         pass
 
-    @staticmethod
     def validation_loop(
-        model: torch.nn.Module,
+        model,
         loss_fn: _Loss,
         valid_loader: DataLoader,
         metric: torcheval.metrics.Metric,
@@ -52,7 +46,7 @@ class BaseModel(ABC):
 
     def train_model(
         self,
-        model: torch.nn.Module,
+        model,
         train_loader: DataLoader,
         valid_loader: DataLoader,
         loss_fn: _Loss,
@@ -67,11 +61,9 @@ class BaseModel(ABC):
         experiment_id: Optional[str] = None,
     ) -> None:
         """
-        Perform model training
+        Perform model training inplace
 
         Args:
-            model: torch.nn.Module
-                Pytorch model for training
             train_loader: DataLoader
                 Data loader for training set
             valid_loader: DataLoader
@@ -156,7 +148,6 @@ class BaseModel(ABC):
 
             # Evaluation phase
             avg_vloss, valid_f1_score = self.validation_loop(
-                model=model,
                 loss_fn=loss_fn,
                 valid_loader=valid_loader,
                 metric=metric,
